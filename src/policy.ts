@@ -41,7 +41,11 @@ export function assertUrlAllowed(rawUrl: string, config: RuntimeConfig): URL {
 }
 
 function checkPageUrl(rawUrl: string, config: RuntimeConfig): void {
-  if (rawUrl === "about:blank" || rawUrl === "") return;
+  // Chromium replaces an aborted main-frame request with this internal error
+  // document. The originating request was already checked and recorded by
+  // guardRoute; treating the renderer fallback as a new navigation creates a
+  // stale, unrelated policy violation.
+  if (rawUrl === "about:blank" || rawUrl === "chrome-error://chromewebdata/" || rawUrl === "") return;
   assertUrlAllowed(rawUrl, config);
 }
 

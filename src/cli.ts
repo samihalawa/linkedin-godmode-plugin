@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 import { createReadStream, realpathSync } from "node:fs";
 import { readFile } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
+import { createRequire } from "node:module";
+import { dirname, join } from "node:path";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 import { stdin as input, stdout as output } from "node:process";
@@ -8,6 +11,11 @@ import { asSafeError } from "./errors.js";
 import { runMcp } from "./mcp.js";
 import { BatchCommandSchema } from "./schemas.js";
 import { createRuntime, TOOL_NAMES, type ToolName } from "./runtime.js";
+
+const require = createRequire(import.meta.url);
+const PLAYWRIGHT_INSTALL_FLAGS = new Set([
+  "--dry-run", "--force", "--only-shell", "--no-shell", "--no-progress", "--with-deps", "--help", "-h",
+]);
 
 const COMMAND_TO_TOOL: Record<string, ToolName> = {
   session: "browser_session", http: "http_request", navigate: "browser_navigate", act: "browser_act",
@@ -17,12 +25,29 @@ const COMMAND_TO_TOOL: Record<string, ToolName> = {
 function usage(): string {
   return [
     "linkedin-godmode mcp [--config FILE]",
+    "linkedin-godmode install-browser [-- PLAYWRIGHT_INSTALL_FLAG...]",
     "linkedin-godmode doctor [--config FILE]",
     "linkedin-godmode call TOOL JSON [--config FILE]",
     "linkedin-godmode session|http|navigate|act|evaluate|capture|network|task JSON [--config FILE]",
     "linkedin-godmode batch [FILE|-] [--config FILE]    # JSONL, one result per line",
     "linkedin-godmode run FILE [--config FILE]          # JSON array or {steps:[...]}",
   ].join("\n");
+}
+
+function installBrowser(arguments_: string[]): number {
+  if (arguments_.length > 0 && arguments_[0] !== "--") {
+    throw new Error("install-browser flags must follow -- (example: install-browser -- --dry-run)");
+  }
+  const flags = arguments_.slice(1);
+  const unsupported = flags.find((flag) => !PLAYWRIGHT_INSTALL_FLAGS.has(flag));
+  if (unsupported) throw new Error(`Unsupported Playwright install flag: ${unsupported}`);
+  const packageDirectory = dirname(require.resolve("playwright/package.json"));
+  const result = spawnSync(process.execPath, [join(packageDirectory, "cli.js"), "install", ...flags, "chromium"], {
+    env: process.env,
+    stdio: "inherit",
+  });
+  if (result.error) throw result.error;
+  return result.status ?? 1;
 }
 
 function extractConfig(arguments_: string[]): { arguments_: string[]; configFile?: string } {
@@ -97,6 +122,7 @@ async function runFile(filename: string | undefined, configFile?: string): Promi
 }
 
 export async function main(argv = process.argv.slice(2)): Promise<number> {
+  if (argv[0] === "install-browser") return installBrowser(argv.slice(1));
   const extracted = extractConfig(argv);
   const [command, ...rest] = extracted.arguments_;
   if (!command || command === "help" || command === "--help" || command === "-h") { output.write(`${usage()}\n`); return 0; }

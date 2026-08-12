@@ -1,10 +1,9 @@
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 
-const testRoot = resolve(".tmp-tests");
-mkdirSync(testRoot, { recursive: true });
-const root = mkdtempSync(join(testRoot, "package-smoke-"));
+const root = mkdtempSync(join(tmpdir(), "linkedin-godmode-package-smoke-"));
 const packDir = join(root, "pack");
 const cache = join(root, "npm-cache");
 const temp = join(root, "tmp");
@@ -22,7 +21,7 @@ try {
   const metadata = JSON.parse(packed.stdout)[0];
   const tarball = join(packDir, metadata.filename);
   const entries = run("tar", ["-tf", tarball]).stdout.trim().split("\n");
-  const required = ["package/dist/cli.js", "package/dist/index.js", "package/.codex-plugin/plugin.json", "package/.mcp.json", "package/README.md", "package/SECURITY.md", "package/LICENSE", "package/skills/linkedin-operator/SKILL.md"];
+  const required = ["package/dist/cli.js", "package/dist/index.js", "package/.codex-plugin/plugin.json", "package/.mcp.json", "package/README.md", "package/SECURITY.md", "package/LICENSE", "package/skills/linkedin-operator/SKILL.md", "package/assets/readme/linkedin-godmode-hero.png", "package/assets/readme/mcp-workflow-screenshot.svg", "package/assets/readme/doctor-screenshot.svg"];
   for (const entry of required) if (!entries.includes(entry)) throw new Error(`tarball missing ${entry}`);
   const forbidden = entries.filter((entry) => /(^|\/)tests?(\/|$)|(^|\/)src(\/|$)|\.env(?:\.|$)|\.map$|\.pi-subagents/.test(entry));
   if (forbidden.length) throw new Error(`tarball contains forbidden files: ${forbidden.join(", ")}`);
@@ -33,6 +32,7 @@ try {
   const localBin = join(consumer, "node_modules", ".bin", "linkedin-godmode");
   if (!existsSync(localBin) || realpathSync(localBin) === localBin) throw new Error("local .bin is missing or not a symlink");
   run(localBin, ["--help"]);
+  run(localBin, ["install-browser", "--", "--dry-run"], { env: { ...env, PLAYWRIGHT_BROWSERS_PATH: join(root, "dry-run-browsers") } });
   const real = run(localBin, ["session", '{"operation":"list"}']);
   const parsed = JSON.parse(real.stdout);
   if (parsed.ok !== true || !Array.isArray(parsed.result)) throw new Error("packed real command did not return a successful list");

@@ -19,8 +19,25 @@ describe("CLI smoke and exit semantics", () => {
     const root = await mkdtemp(join(resolve(".tmp-tests"), "godmode-cli-")); roots.push(root);
     const result = run(root, ["doctor"], { env: { PLAYWRIGHT_BROWSERS_PATH: join(root, "missing-browsers") } });
     expect(result.status).toBe(1);
-    expect(JSON.parse(result.stdout)).toMatchObject({ ok: false, browserExecutable: false });
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      ok: false,
+      browserExecutable: false,
+      remediation: { browser: { command: "linkedin-godmode install-browser", npxCommand: "npx -y linkedin-godmode@0.1.1 install-browser" } },
+    });
     expect(result.stderr).toBe("");
+  });
+
+  it("runs the bundled Playwright Chromium installer and preserves its output", async () => {
+    const root = await mkdtemp(join(resolve(".tmp-tests"), "godmode-installer-")); roots.push(root);
+    const result = run(root, ["install-browser", "--", "--dry-run"], {
+      env: { PLAYWRIGHT_BROWSERS_PATH: join(root, "browsers") },
+    });
+    expect(result.status, result.stderr).toBe(0);
+    expect(result.stdout).toContain("chromium");
+
+    const invalid = run(root, ["install-browser", "--dry-run"]);
+    expect(invalid.status).toBe(1);
+    expect(invalid.stderr).toContain("flags must follow --");
   });
 
   it("returns nonzero for failed one-shot, batch, and run while preserving JSON stdout", async () => {

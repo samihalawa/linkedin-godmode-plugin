@@ -1,7 +1,7 @@
 {
   "name": "linkedin-godmode",
-  "version": "0.1.0",
-  "description": "Generic browser and HTTP primitives for agent-operated LinkedIn workflows via local Chrome, Browserbase, or Anchor Browser.",
+  "version": "0.1.1",
+  "description": "Generic browser and HTTP primitives for agent-operated LinkedIn workflows via local Chromium/Chrome, Browserbase, or Anchor Browser.",
   "type": "module",
   "license": "MIT",
   "author": "Sami Halawa",
@@ -49,6 +49,7 @@
     "test:unit": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers vitest run tests/unit",
     "test:integration": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers vitest run tests/integration",
     "test:package": "node tests/package-smoke.mjs",
+    "test:consumer": "node tests/consumer-smoke.mjs",
     "check": "npm run build && npm test",
     "prepack": "npm run build"
   },

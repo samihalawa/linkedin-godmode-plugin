@@ -3,12 +3,13 @@ import { asSafeError, GodmodeError } from "./errors.js";
 import { redact } from "./redaction.js";
 import type { GodmodeRuntime } from "./runtime.js";
 import { TOOL_DEFINITIONS, TOOL_NAMES } from "./runtime.js";
+import { PACKAGE_VERSION } from "./version.js";
 
 const SHUTDOWN_TIMEOUT_MS = 5_000;
 
 export async function createMcpServer(runtime: GodmodeRuntime): Promise<McpServer> {
   const { McpServer: Server } = await import("@modelcontextprotocol/sdk/server/mcp.js");
-  const server = new Server({ name: "linkedin-godmode", version: "0.1.0" });
+  const server = new Server({ name: "linkedin-godmode", version: PACKAGE_VERSION });
   for (const name of TOOL_NAMES) {
     const definition = TOOL_DEFINITIONS[name];
     server.registerTool(

@@ -39,7 +39,7 @@
       <rect width="464" height="142" rx="22" fill="#FFFFFF"/>
       <rect width="10" height="142" rx="5" fill="#14B8A6"/>
       <circle cx="58" cy="54" r="25" fill="#D8FAF4"/><path d="M46 54l8 8 17-20" fill="none" stroke="#0F9F91" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-      <text x="100" y="48" fill="#0B2341" font-size="24" font-weight="800">Local Chrome</text>
+      <text x="100" y="48" fill="#0B2341" font-size="24" font-weight="800">Local Chromium</text>
       <text x="100" y="77" fill="#52708D" font-size="16">Browser executable found</text>
       <rect x="100" y="96" width="88" height="27" rx="13" fill="#D8FAF4"/><text x="144" y="115" fill="#08766C" font-size="13" font-weight="800" text-anchor="middle">READY</text>
       <text x="206" y="115" fill="#52708D" font-size="14">persistent profile · 0700</text>

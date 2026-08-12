@@ -78,7 +78,7 @@ export class LocalProvider implements SessionProvider {
     } catch (error) {
       await context!.close().catch(() => undefined);
       if (error instanceof GodmodeError) throw error;
-      throw new GodmodeError("PROVIDER_ERROR", "Unable to launch the dedicated local Chrome profile", undefined, { cause: error });
+      throw new GodmodeError("PROVIDER_ERROR", "Unable to launch the dedicated local Chromium/Chrome profile", undefined, { cause: error });
     }
     return {
       provider: this.name,

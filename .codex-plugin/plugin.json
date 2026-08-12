@@ -1,7 +1,7 @@
 {
   "name": "linkedin-godmode-plugin",
-  "version": "0.1.0",
-  "description": "Agent-operated generic browser and HTTP primitives for personal LinkedIn workflows using local Chrome, Browserbase, or Anchor Browser.",
+  "version": "0.1.1",
+  "description": "Agent-operated generic browser and HTTP primitives for personal LinkedIn workflows using local Chromium/Chrome, Browserbase, or Anchor Browser.",
   "author": {
     "name": "Sami Halawa",
     "email": "samihalawa@gmail.com",
@@ -16,7 +16,7 @@
   "interface": {
     "displayName": "LinkedIn Godmode",
     "shortDescription": "Generic browser and HTTP control for personal LinkedIn workflows",
-    "longDescription": "Operate a dedicated local Chrome profile, Browserbase, or Anchor Browser through generic browser, network, JavaScript, HTTP, and explicit hosted-task primitives. Includes deterministic no-AI CLI batch execution and capture-first agent skills.",
+    "longDescription": "Operate a dedicated local Chromium/Chrome profile, Browserbase, or Anchor Browser through generic browser, network, JavaScript, HTTP, and explicit hosted-task primitives. Includes deterministic no-AI CLI batch execution and capture-first agent skills.",
     "developerName": "Sami Halawa",
     "category": "Developer Tools",
     "capabilities": ["Interactive", "Read", "Write"],

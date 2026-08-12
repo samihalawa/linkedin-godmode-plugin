@@ -5,6 +5,8 @@ import { chromium } from "playwright";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { afterEach, describe, expect, it } from "vitest";
+import packageMetadata from "../../package.json" with { type: "json" };
+import pluginMetadata from "../../.codex-plugin/plugin.json" with { type: "json" };
 
 const roots: string[] = [];
 afterEach(async () => Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true }))));
@@ -32,6 +34,8 @@ describe("MCP stdio", () => {
     const { client } = await connect(root);
     try {
       const listed = await client.listTools();
+      expect(client.getServerVersion()).toEqual({ name: "linkedin-godmode", version: packageMetadata.version });
+      expect(pluginMetadata.version).toBe(packageMetadata.version);
       expect(listed.tools.map((tool) => tool.name)).toEqual([
         "browser_session", "http_request", "browser_navigate", "browser_act", "browser_evaluate",
         "browser_capture", "browser_network", "browser_task", "doctor",

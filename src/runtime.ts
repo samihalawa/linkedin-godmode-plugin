@@ -21,6 +21,7 @@ import {
 } from "./schemas.js";
 import { SessionManager } from "./sessions.js";
 import { BrowserTasks } from "./tasks.js";
+import { PACKAGE_VERSION } from "./version.js";
 
 export const TOOL_DEFINITIONS = {
   browser_session: {
@@ -110,6 +111,14 @@ export class GodmodeRuntime {
       node: process.version,
       platform: process.platform,
       browserExecutable,
+      ...(!browserExecutable ? {
+        remediation: {
+          browser: {
+            command: "linkedin-godmode install-browser",
+            npxCommand: `npx -y linkedin-godmode@${PACKAGE_VERSION} install-browser`,
+          },
+        },
+      } : {}),
       stateDir: { ready: true, mode: await directoryMode(this.config.stateDir) },
       profileDir: { ready: true, mode: await directoryMode(this.config.profileDir) },
       configFile: { present: configFilePresent },

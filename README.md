@@ -5,7 +5,7 @@
 <h1 align="center">LinkedIn Godmode</h1>
 
 <p align="center">
-  <strong>One browser automation core. MCP, CLI, HTTP, local Chrome, or cloud browsers.</strong>
+  <strong>One browser automation core. MCP, CLI, HTTP, local Chromium/Chrome, or cloud browsers.</strong>
 </p>
 
 <p align="center">
@@ -30,7 +30,7 @@ The same TypeScript core powers MCP, one-shot CLI commands, JSON runs, and JSONL
   <tr>
     <td width="33%" valign="top"><strong>LinkedIn in the browser</strong><br />Navigate, locate, act, evaluate, capture, and inspect network traffic through one generic surface.</td>
     <td width="33%" valign="top"><strong>Capture-first</strong><br />Observe the browser request, replay the minimum HTTP shape, then verify the result at the layer that matters.</td>
-    <td width="33%" valign="top"><strong>Run anywhere</strong><br />Use a dedicated local Chrome profile, Browserbase, or Anchor without changing the core tool model.</td>
+    <td width="33%" valign="top"><strong>Run anywhere</strong><br />Use a dedicated local Chromium/Chrome profile, Browserbase, or Anchor without changing the core tool model.</td>
   </tr>
 </table>
 
@@ -43,7 +43,7 @@ The same TypeScript core powers MCP, one-shot CLI commands, JSON runs, and JSONL
 ## Requirements
 
 - Node.js 20.11 or newer
-- Playwright Chromium (installed by the package; run `npx playwright install chromium` if your package manager skipped browser installation)
+- Playwright Chromium, installed explicitly with the package-owned `install-browser` command
 - For cloud providers, the corresponding environment variables
 - A LinkedIn account you are authorized to operate
 
@@ -52,12 +52,13 @@ The same TypeScript core powers MCP, one-shot CLI commands, JSON runs, and JSONL
 Install from npm and run the environment doctor:
 
 ```bash
-npm install --global linkedin-godmode
+npm install --global linkedin-godmode@0.1.1
+linkedin-godmode install-browser
 linkedin-godmode doctor
 ```
 
 <p align="center">
-  <img src="assets/readme/doctor-screenshot.svg" alt="LinkedIn Godmode doctor command showing local Chrome ready and optional cloud provider configuration" width="100%" />
+  <img src="assets/readme/doctor-screenshot.svg" alt="LinkedIn Godmode doctor command showing local Chromium ready and optional cloud provider configuration" width="100%" />
 </p>
 
 From this source checkout:
@@ -66,21 +67,26 @@ From this source checkout:
 npm ci
 npm run build
 npm link
+linkedin-godmode install-browser
 linkedin-godmode doctor
 ```
 
 Run without a global install:
 
 ```bash
-npx -y linkedin-godmode@latest doctor
+npx -y linkedin-godmode@0.1.1 install-browser
+npx -y linkedin-godmode@0.1.1 doctor
 ```
+
+`install-browser` runs the Chromium installer bundled with this exact package version. Optional upstream flags must follow `--`, for example `linkedin-godmode install-browser -- --dry-run`.
 
 ### Codex MCP installation
 
 The packaged Codex plugin declares `.mcp.json` and five skills. For direct Codex CLI use, install the npm MCP server:
 
 ```bash
-codex mcp add linkedin-godmode -- npx -y linkedin-godmode@latest mcp
+npx -y linkedin-godmode@0.1.1 install-browser
+codex mcp add linkedin-godmode -- npx -y linkedin-godmode@0.1.1 mcp
 ```
 
 For a source checkout:
@@ -96,7 +102,7 @@ Equivalent client configuration:
   "mcpServers": {
     "linkedin-godmode": {
       "command": "npx",
-      "args": ["-y", "linkedin-godmode@latest", "mcp"],
+      "args": ["-y", "linkedin-godmode@0.1.1", "mcp"],
       "env": {
         "LINKEDIN_GODMODE_DEFAULT_PROVIDER": "local"
       }
@@ -127,13 +133,13 @@ There are deliberately no tools named for messaging, jobs, invitations, reaction
 
 | Provider | Best for | Connection | Persistence |
 |---|---|---|---|
-| **Local Chrome** | Personal, visible browser sessions | Playwright | Dedicated local profile |
+| **Local Chromium/Chrome** | Personal, visible browser sessions | Playwright | Dedicated local profile |
 | **Browserbase** | Remote browser infrastructure | CDP | Browserbase Context |
 | **Anchor Browser** | Remote sessions and explicit web tasks | CDP + task API | Anchor profile |
 
-### Local Playwright persistent Chrome
+### Local Playwright persistent Chromium/Chrome
 
-Local is the default. Each profile is stored under:
+Local is the default and uses the package's Playwright Chromium build. Set `LINKEDIN_GODMODE_CHROME_CHANNEL` only when you intentionally want an installed Chrome channel. Each profile is stored under:
 
 ```text
 ~/.local/state/linkedin-godmode/profiles/<profile>
@@ -374,19 +380,23 @@ npm run build
 npm test
 npm audit
 npm pack --dry-run
+npm run test:consumer
 ```
 
 The integration suite starts a local fixture server and a package Chromium instance, proves persistent local storage across profile reopen, and exercises navigation, actions, JavaScript, captures, network recording, HTTP, and teardown. It skips only when Playwright reports that no browser executable exists.
 
 ## Publish to npm
 
-The package name was unclaimed when this source was prepared; registry state can change. Publish only from the authoritative clean source repository:
+Publish a new version only from the authoritative clean source repository. Confirm that the intended version is absent before publishing it:
 
 ```bash
 npm login
 npm whoami
+npm view linkedin-godmode@<new-version> version
 npm ci
 npm run check
+npm run test:package
+npm run test:consumer
 npm audit
 npm pack --dry-run
 npm publish --access public
@@ -395,8 +405,9 @@ npm publish --access public
 After publication:
 
 ```bash
-npx -y linkedin-godmode@0.1.0 doctor
-npm view linkedin-godmode@0.1.0 dist.integrity
+npx -y linkedin-godmode@0.1.1 install-browser
+npx -y linkedin-godmode@0.1.1 doctor
+npm view linkedin-godmode@0.1.1 dist.integrity
 ```
 
 Do not publish from a generated tarball, a parent monorepo, or a directory containing browser profiles or credentials.
