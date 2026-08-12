@@ -1,8 +1,45 @@
-# LinkedIn Godmode
+<p align="center">
+  <img src="assets/readme/linkedin-godmode-hero.png" alt="LinkedIn Godmode browser, terminal, network capture, and cloud provider toolkit" width="100%" />
+</p>
 
-A Codex plugin, npm CLI, and MCP stdio server that gives an agent broad **generic** browser and HTTP primitives for operating a personal LinkedIn session. The package does not encode LinkedIn business actions or mutable private endpoints. The caller supplies URLs, locators, JavaScript, HTTP endpoints, payloads, and explicit task prompts.
+<h1 align="center">LinkedIn Godmode</h1>
+
+<p align="center">
+  <strong>One browser automation core. MCP, CLI, HTTP, local Chrome, or cloud browsers.</strong>
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/linkedin-godmode"><img alt="npm version" src="https://img.shields.io/npm/v/linkedin-godmode?style=flat-square&amp;color=0A66C2" /></a>
+  <a href="https://www.npmjs.com/package/linkedin-godmode"><img alt="npm downloads" src="https://img.shields.io/npm/dm/linkedin-godmode?style=flat-square&amp;color=14B8A6" /></a>
+  <img alt="Node.js 20.11 or newer" src="https://img.shields.io/node/v/linkedin-godmode?style=flat-square&amp;color=7C3AED" />
+  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/github/license/samihalawa/linkedin-godmode-plugin?style=flat-square&amp;color=F97360" /></a>
+</p>
+
+<p align="center">
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#generic-tool-surface">Tools</a> ·
+  <a href="#providers">Providers</a> ·
+  <a href="#browser-examples">Examples</a> ·
+  <a href="#development-and-verification">Verification</a>
+</p>
+
+LinkedIn Godmode is a Codex plugin, npm CLI, and MCP stdio server that gives an agent broad **generic** browser and HTTP primitives for operating a personal LinkedIn session. The caller supplies URLs, locators, JavaScript, HTTP endpoints, payloads, and explicit task prompts—the package does not encode LinkedIn business actions or mutable private endpoints.
 
 The same TypeScript core powers MCP, one-shot CLI commands, JSON runs, and JSONL batches. Deterministic browser and HTTP operations do not call an AI model. `browser_task` is the only AI-capable operation and runs only when explicitly invoked.
+
+<table>
+  <tr>
+    <td width="33%" valign="top"><strong>Browser-native</strong><br />Navigate, locate, act, evaluate, capture, and inspect network traffic through one generic surface.</td>
+    <td width="33%" valign="top"><strong>Capture-first</strong><br />Observe the browser request, replay the minimum HTTP shape, then verify the result at the layer that matters.</td>
+    <td width="33%" valign="top"><strong>Run anywhere</strong><br />Use a dedicated local Chrome profile, Browserbase, or Anchor without changing the core tool model.</td>
+  </tr>
+</table>
+
+## How it fits together
+
+<p align="center">
+  <img src="assets/readme/runtime-architecture.svg" alt="Codex MCP, CLI, and HTTP share one TypeScript core connected to local Chrome, Browserbase, or Anchor" width="100%" />
+</p>
 
 ## Requirements
 
@@ -11,9 +48,9 @@ The same TypeScript core powers MCP, one-shot CLI commands, JSON runs, and JSONL
 - For cloud providers, the corresponding environment variables
 - A LinkedIn account you are authorized to operate
 
-## Install
+## Quick start
 
-From npm after publication:
+Install from npm and run the environment doctor:
 
 ```bash
 npm install --global linkedin-godmode
@@ -84,6 +121,12 @@ Never place provider keys directly in a checked-in MCP configuration. Inherit th
 There are deliberately no tools named for messaging, jobs, invitations, reactions, posting, profiles, campaigns, or any other LinkedIn business action.
 
 ## Providers
+
+| Provider | Best for | Connection | Persistence |
+|---|---|---|---|
+| **Local Chrome** | Personal, visible browser sessions | Playwright | Dedicated local profile |
+| **Browserbase** | Remote browser infrastructure | CDP | Browserbase Context |
+| **Anchor Browser** | Remote sessions and explicit web tasks | CDP + task API | Anchor profile |
 
 ### Local Playwright persistent Chrome
 
@@ -202,6 +245,10 @@ Network capture omits bodies by default:
 Set `includeBodies:true` only for a narrow capture. Per-body, aggregate-byte, pending-work, and total-entry caps still apply; bodies with no trustworthy bounded size may be omitted, and cookie and authorization headers are removed.
 
 ## HTTP and capture-first request replay
+
+<p align="center">
+  <img src="assets/readme/capture-replay-flow.svg" alt="Interact, capture, replay, and verify workflow" width="100%" />
+</p>
 
 `http_request` uses a byte-capped streaming Node request. When `sessionId` is present, destination-scoped cookies are read from that browser context's cookie jar in memory and recomputed for every redirect hop. Literal `Cookie` headers are always rejected and raw cookies are never returned.
 

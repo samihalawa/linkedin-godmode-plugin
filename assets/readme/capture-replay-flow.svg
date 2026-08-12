@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="620" viewBox="0 0 1600 620" role="img" aria-labelledby="title desc">
+  <title id="title">Capture-first HTTP replay workflow</title>
+  <desc id="desc">A four-step workflow to interact, capture, replay, and verify a request.</desc>
+  <rect width="1600" height="620" rx="36" fill="#F5F8FC"/>
+  <path d="M0 0h430L260 178H0z" fill="#DDF7FB"/>
+  <path d="M1600 620h-430l170-178h260z" fill="#EEE8FF"/>
+  <circle cx="1490" cy="92" r="58" fill="#FFE7D8"/>
+  <circle cx="142" cy="520" r="34" fill="#FDE68A"/>
+  <text x="800" y="78" fill="#0B2341" font-family="Inter, Arial, sans-serif" font-size="32" font-weight="800" text-anchor="middle" letter-spacing="2">CAPTURE → UNDERSTAND → REPLAY → VERIFY</text>
+  <text x="800" y="116" fill="#5D7691" font-family="Inter, Arial, sans-serif" font-size="19" text-anchor="middle">Turn a real browser interaction into a bounded, inspectable request.</text>
+
+  <path d="M390 304h96M754 304h96M1118 304h96" stroke="#9AB4CE" stroke-width="6" stroke-linecap="round"/>
+  <path d="M472 292l16 12-16 12M836 292l16 12-16 12M1200 292l16 12-16 12" fill="none" stroke="#9AB4CE" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g font-family="Inter, Arial, sans-serif">
+    <g transform="translate(92 168)">
+      <rect width="298" height="272" rx="26" fill="#FFFFFF" stroke="#D8E4EF" stroke-width="2"/>
+      <circle cx="46" cy="42" r="22" fill="#0A66C2"/><text x="46" y="49" fill="#FFFFFF" font-size="20" font-weight="800" text-anchor="middle">1</text>
+      <rect x="98" y="28" width="156" height="110" rx="15" fill="#E8F4FF"/>
+      <rect x="113" y="44" width="126" height="78" rx="8" fill="#FFFFFF" stroke="#75B8EF" stroke-width="3"/>
+      <circle cx="125" cy="56" r="3" fill="#FB7185"/><circle cx="135" cy="56" r="3" fill="#FBBF24"/><circle cx="145" cy="56" r="3" fill="#14B8A6"/>
+      <rect x="128" y="76" width="74" height="10" rx="5" fill="#BCDDF8"/>
+      <rect x="128" y="94" width="46" height="15" rx="7" fill="#0A66C2"/>
+      <text x="149" y="178" fill="#0B2341" font-size="22" font-weight="800" text-anchor="middle">INTERACT</text>
+      <text x="149" y="211" fill="#607A94" font-size="16" text-anchor="middle">Perform the real action</text>
+      <text x="149" y="236" fill="#607A94" font-size="16" text-anchor="middle">in a browser page.</text>
+    </g>
+
+    <g transform="translate(456 168)">
+      <rect width="298" height="272" rx="26" fill="#FFFFFF" stroke="#D8E4EF" stroke-width="2"/>
+      <circle cx="46" cy="42" r="22" fill="#14B8A6"/><text x="46" y="49" fill="#FFFFFF" font-size="20" font-weight="800" text-anchor="middle">2</text>
+      <rect x="98" y="28" width="156" height="110" rx="15" fill="#E4FAF5"/>
+      <path d="M115 94c10-34 20 24 31-11s19 24 30 2 20 23 31-12 20 20 31-8" fill="none" stroke="#0F9F91" stroke-width="6" stroke-linecap="round"/>
+      <circle cx="146" cy="83" r="6" fill="#FBBF24"/><circle cx="207" cy="73" r="6" fill="#FB7185"/>
+      <text x="149" y="178" fill="#0B2341" font-size="22" font-weight="800" text-anchor="middle">CAPTURE</text>
+      <text x="149" y="211" fill="#607A94" font-size="16" text-anchor="middle">Record a bounded request</text>
+      <text x="149" y="236" fill="#607A94" font-size="16" text-anchor="middle">and response trace.</text>
+    </g>
+
+    <g transform="translate(820 168)">
+      <rect width="298" height="272" rx="26" fill="#FFFFFF" stroke="#D8E4EF" stroke-width="2"/>
+      <circle cx="46" cy="42" r="22" fill="#8B5CF6"/><text x="46" y="49" fill="#FFFFFF" font-size="20" font-weight="800" text-anchor="middle">3</text>
+      <rect x="98" y="28" width="156" height="110" rx="15" fill="#F0EBFF"/>
+      <path d="M142 55a37 37 0 1 1-11 55" fill="none" stroke="#7C3AED" stroke-width="7" stroke-linecap="round"/>
+      <path d="M120 97l11 14 16-11" fill="none" stroke="#7C3AED" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M168 75l12 11 22-25" fill="none" stroke="#14B8A6" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="149" y="178" fill="#0B2341" font-size="22" font-weight="800" text-anchor="middle">REPLAY</text>
+      <text x="149" y="211" fill="#607A94" font-size="16" text-anchor="middle">Send the request through</text>
+      <text x="149" y="236" fill="#607A94" font-size="16" text-anchor="middle">the generic HTTP tool.</text>
+    </g>
+
+    <g transform="translate(1184 168)">
+      <rect width="298" height="272" rx="26" fill="#FFFFFF" stroke="#D8E4EF" stroke-width="2"/>
+      <circle cx="46" cy="42" r="22" fill="#F97360"/><text x="46" y="49" fill="#FFFFFF" font-size="20" font-weight="800" text-anchor="middle">4</text>
+      <rect x="98" y="28" width="156" height="110" rx="15" fill="#FFF0E9"/>
+      <circle cx="176" cy="83" r="40" fill="#FFFFFF" stroke="#F5A08D" stroke-width="5"/>
+      <path d="M153 84l16 16 31-35" fill="none" stroke="#F05D42" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="149" y="178" fill="#0B2341" font-size="22" font-weight="800" text-anchor="middle">VERIFY</text>
+      <text x="149" y="211" fill="#607A94" font-size="16" text-anchor="middle">Read the response and</text>
+      <text x="149" y="236" fill="#607A94" font-size="16" text-anchor="middle">independently confirm state.</text>
+    </g>
+  </g>
+
+  <rect x="288" y="495" width="1024" height="68" rx="20" fill="#0B2341"/>
+  <g fill="#D8E9F8" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700" text-anchor="middle">
+    <text x="515" y="536">COOKIES STAY IN MEMORY</text>
+    <circle cx="704" cy="529" r="5" fill="#22D3EE"/>
+    <text x="832" y="536">BODIES OPT IN</text>
+    <circle cx="954" cy="529" r="5" fill="#FBBF24"/>
+    <text x="1122" y="536">BOUNDED + REDACTED OUTPUT</text>
+  </g>
+</svg>
