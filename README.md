@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/readme/linkedin-godmode-hero.png" alt="LinkedIn Godmode browser, terminal, network capture, and cloud provider toolkit" width="100%" />
+  <img src="assets/readme/linkedin-godmode-hero.png" alt="Illustrated LinkedIn feed beside a LinkedIn Godmode MCP workflow preview" width="100%" />
 </p>
 
 <h1 align="center">LinkedIn Godmode</h1>
@@ -10,7 +10,6 @@
 
 <p align="center">
   <a href="https://www.npmjs.com/package/linkedin-godmode"><img alt="npm version" src="https://img.shields.io/npm/v/linkedin-godmode?style=flat-square&amp;color=0A66C2" /></a>
-  <a href="https://www.npmjs.com/package/linkedin-godmode"><img alt="npm downloads" src="https://img.shields.io/npm/dm/linkedin-godmode?style=flat-square&amp;color=14B8A6" /></a>
   <img alt="Node.js 20.11 or newer" src="https://img.shields.io/node/v/linkedin-godmode?style=flat-square&amp;color=7C3AED" />
   <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/github/license/samihalawa/linkedin-godmode-plugin?style=flat-square&amp;color=F97360" /></a>
 </p>
@@ -29,16 +28,16 @@ The same TypeScript core powers MCP, one-shot CLI commands, JSON runs, and JSONL
 
 <table>
   <tr>
-    <td width="33%" valign="top"><strong>Browser-native</strong><br />Navigate, locate, act, evaluate, capture, and inspect network traffic through one generic surface.</td>
+    <td width="33%" valign="top"><strong>LinkedIn in the browser</strong><br />Navigate, locate, act, evaluate, capture, and inspect network traffic through one generic surface.</td>
     <td width="33%" valign="top"><strong>Capture-first</strong><br />Observe the browser request, replay the minimum HTTP shape, then verify the result at the layer that matters.</td>
     <td width="33%" valign="top"><strong>Run anywhere</strong><br />Use a dedicated local Chrome profile, Browserbase, or Anchor without changing the core tool model.</td>
   </tr>
 </table>
 
-## How it fits together
+## See the MCP workflow
 
 <p align="center">
-  <img src="assets/readme/runtime-architecture.svg" alt="Codex MCP, CLI, and HTTP share one TypeScript core connected to local Chrome, Browserbase, or Anchor" width="100%" />
+  <img src="assets/readme/mcp-workflow-screenshot.svg" alt="Illustrated sample of MCP browser session, navigation, and capture calls beside a LinkedIn feed" width="100%" />
 </p>
 
 ## Requirements
@@ -56,6 +55,10 @@ Install from npm and run the environment doctor:
 npm install --global linkedin-godmode
 linkedin-godmode doctor
 ```
+
+<p align="center">
+  <img src="assets/readme/doctor-screenshot.svg" alt="LinkedIn Godmode doctor command showing local Chrome ready and optional cloud provider configuration" width="100%" />
+</p>
 
 From this source checkout:
 
@@ -245,10 +248,6 @@ Network capture omits bodies by default:
 Set `includeBodies:true` only for a narrow capture. Per-body, aggregate-byte, pending-work, and total-entry caps still apply; bodies with no trustworthy bounded size may be omitted, and cookie and authorization headers are removed.
 
 ## HTTP and capture-first request replay
-
-<p align="center">
-  <img src="assets/readme/capture-replay-flow.svg" alt="Interact, capture, replay, and verify workflow" width="100%" />
-</p>
 
 `http_request` uses a byte-capped streaming Node request. When `sessionId` is present, destination-scoped cookies are read from that browser context's cookie jar in memory and recomputed for every redirect hop. Literal `Cookie` headers are always rejected and raw cookies are never returned.
 
