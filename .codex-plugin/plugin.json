@@ -1,0 +1,32 @@
+{
+  "name": "linkedin-godmode-plugin",
+  "version": "0.1.0",
+  "description": "Agent-operated generic browser and HTTP primitives for personal LinkedIn workflows using local Chrome, Browserbase, or Anchor Browser.",
+  "author": {
+    "name": "Sami Halawa",
+    "email": "samihalawa@gmail.com",
+    "url": "https://samihalawa.com/"
+  },
+  "homepage": "https://github.com/samihalawa/linkedin-godmode-plugin#readme",
+  "repository": "https://github.com/samihalawa/linkedin-godmode-plugin",
+  "license": "MIT",
+  "keywords": ["linkedin", "browser", "mcp", "playwright", "browserbase", "anchor-browser"],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "LinkedIn Godmode",
+    "shortDescription": "Generic browser and HTTP control for personal LinkedIn workflows",
+    "longDescription": "Operate a dedicated local Chrome profile, Browserbase, or Anchor Browser through generic browser, network, JavaScript, HTTP, and explicit hosted-task primitives. Includes deterministic no-AI CLI batch execution and capture-first agent skills.",
+    "developerName": "Sami Halawa",
+    "category": "Developer Tools",
+    "capabilities": ["Interactive", "Read", "Write"],
+    "websiteURL": "https://github.com/samihalawa/linkedin-godmode-plugin",
+    "defaultPrompt": [
+      "Inspect my LinkedIn session and use generic browser primitives to complete my request.",
+      "Capture the relevant browser traffic, then replay only the request I explicitly ask for.",
+      "Run a deterministic no-AI browser batch using my dedicated profile."
+    ],
+    "brandColor": "#0A66C2",
+    "screenshots": []
+  }
+}

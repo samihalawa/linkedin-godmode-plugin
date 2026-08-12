@@ -1,0 +1,6 @@
+interface:
+  display_name: "LinkedIn Browser Providers"
+  short_description: "Choose local, Browserbase, or Anchor sessions"
+  default_prompt: "Use $linkedin-browser-providers to choose the safest provider, create the session, and report only sanitized identifiers."
+policy:
+  allow_implicit_invocation: true

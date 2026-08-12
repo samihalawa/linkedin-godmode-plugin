@@ -1,0 +1,6 @@
+interface:
+  display_name: "LinkedIn Network Replay"
+  short_description: "Capture and replay current browser requests safely"
+  default_prompt: "Use $linkedin-network-capture-replay to discover the current request shape, replay it once, and verify the result."
+policy:
+  allow_implicit_invocation: true

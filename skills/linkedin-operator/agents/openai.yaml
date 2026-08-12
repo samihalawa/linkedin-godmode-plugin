@@ -1,0 +1,6 @@
+interface:
+  display_name: "LinkedIn Operator"
+  short_description: "Operate personal LinkedIn with generic primitives"
+  default_prompt: "Use $linkedin-operator to inspect my current session, perform the requested action once, and verify it."
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,66 @@
+{
+  "name": "linkedin-godmode",
+  "version": "0.1.0",
+  "description": "Generic browser and HTTP primitives for agent-operated LinkedIn workflows via local Chrome, Browserbase, or Anchor Browser.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Sami Halawa",
+  "homepage": "https://github.com/samihalawa/linkedin-godmode-plugin#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/samihalawa/linkedin-godmode-plugin.git"
+  },
+  "bugs": {
+    "url": "https://github.com/samihalawa/linkedin-godmode-plugin/issues"
+  },
+  "keywords": [
+    "codex-plugin",
+    "mcp",
+    "playwright",
+    "browserbase",
+    "anchor-browser",
+    "linkedin"
+  ],
+  "bin": {
+    "linkedin-godmode": "dist/cli.js"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./mcp": "./dist/mcp.js"
+  },
+  "files": [
+    "dist",
+    ".codex-plugin",
+    ".mcp.json",
+    "skills",
+    "README.md",
+    "SECURITY.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20.11"
+  },
+  "scripts": {
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "build": "npm run clean && tsc -p tsconfig.json",
+    "postbuild": "node -e \"require('fs').chmodSync('dist/cli.js',0o755)\"",
+    "test": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers vitest run",
+    "test:unit": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers vitest run tests/unit",
+    "test:integration": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers vitest run tests/integration",
+    "test:package": "node tests/package-smoke.mjs",
+    "check": "npm run build && npm test",
+    "prepack": "npm run build"
+  },
+  "dependencies": {
+    "@browserbasehq/sdk": "2.16.0",
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "anchorbrowser": "1.0.0",
+    "playwright": "1.62.1",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "26.2.0",
+    "typescript": "7.0.2",
+    "vitest": "4.1.10"
+  }
+}

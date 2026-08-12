@@ -1,0 +1,6 @@
+interface:
+  display_name: "LinkedIn Safety Verification"
+  short_description: "Gate and verify account-visible browser operations"
+  default_prompt: "Use $linkedin-safety-verification to preflight this operation, execute it once if authorized, and verify the result."
+policy:
+  allow_implicit_invocation: true

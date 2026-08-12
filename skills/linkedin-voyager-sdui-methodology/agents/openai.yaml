@@ -1,0 +1,6 @@
+interface:
+  display_name: "Voyager and SDUI Method"
+  short_description: "Interpret captured private web protocols safely"
+  default_prompt: "Use $linkedin-voyager-sdui-methodology to analyze this fresh capture without hardcoding mutable protocol details."
+policy:
+  allow_implicit_invocation: true
