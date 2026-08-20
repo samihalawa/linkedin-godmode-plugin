@@ -1,6 +1,6 @@
 interface:
   display_name: "LinkedIn Safety Verification"
-  short_description: "Verify authorized LinkedIn batches without re-gating"
-  default_prompt: "Use $linkedin-safety-verification to bind the authorized batch once, operate only through the selected authenticated controller, verify each write at the product layer, and continue without per-item confirmation."
+  short_description: "Verify LinkedIn batches without invented gates"
+  default_prompt: "Use $linkedin-safety-verification to bind batch scope once, obey the selected controller's mandatory action-time boundary, verify each write at the product layer, and continue without agent-invented reconfirmation."
 policy:
   allow_implicit_invocation: true

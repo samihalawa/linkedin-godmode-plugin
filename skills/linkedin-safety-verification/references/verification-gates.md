@@ -5,7 +5,7 @@
 - Exact target/filter and intended effect are bound; individual matching targets may be resolved during the authorized batch.
 - Current session/provider is known.
 - Host allowlist and read-only state are appropriate.
-- Bulk scope is bound to the user's authorized cohort or filters; no per-item reconfirmation is required.
+- Bulk scope is bound to the user's authorized cohort or filters; no agent-invented reconfirmation is required, but the selected controller's mandatory action-time boundary still applies.
 - The named authenticated controller is authoritative and no concurrent LinkedIn controller is active.
 - The operation is not an unrequested recurring schedule, evasive, or challenge-bypassing.
 - A write has an independent verification path.

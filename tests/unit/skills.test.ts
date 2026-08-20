@@ -20,4 +20,15 @@ describe("packaged skills", () => {
       expect(manifest).toContain(`$${directory}`);
     }
   });
+
+  it("keeps batch autonomy compatible with selected-controller confirmation policy", async () => {
+    const safety = await readFile(resolve("skills/linkedin-safety-verification/SKILL.md"), "utf8");
+    const gates = await readFile(resolve("skills/linkedin-safety-verification/references/verification-gates.md"), "utf8");
+    const operator = await readFile(resolve("skills/linkedin-operator/SKILL.md"), "utf8");
+    expect(safety).toContain("never overrides the selected controller's action-time confirmation policy");
+    expect(safety).toContain("ask once at the latest permitted moment");
+    expect(gates).toContain("selected controller's mandatory action-time boundary");
+    expect(operator).toContain("selected controller's mandatory action-time confirmation policy");
+    expect(safety).not.toContain("continue automatically through the authorized batch without confirmation prompts");
+  });
 });
