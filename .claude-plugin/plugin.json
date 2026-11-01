@@ -1,0 +1,31 @@
+{
+  "name": "linkedin-godmode-plugin",
+  "version": "0.1.2",
+  "description": "Agent-operated generic browser and HTTP primitives for personal LinkedIn workflows using local Chromium/Chrome, Browserbase, or Anchor Browser.",
+  "author": {
+    "name": "Sami Halawa",
+    "email": "samihalawa@gmail.com",
+    "url": "https://samihalawa.com/"
+  },
+  "homepage": "https://github.com/samihalawa/linkedin-godmode-plugin#readme",
+  "repository": "https://github.com/samihalawa/linkedin-godmode-plugin",
+  "license": "MIT",
+  "keywords": [
+    "linkedin",
+    "browser",
+    "mcp",
+    "playwright",
+    "browserbase",
+    "anchor-browser"
+  ],
+  "mcpServers": {
+    "linkedin-godmode": {
+      "command": "node",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/dist/cli.js",
+        "mcp"
+      ],
+      "cwd": "${CLAUDE_PLUGIN_ROOT}"
+    }
+  }
+}
