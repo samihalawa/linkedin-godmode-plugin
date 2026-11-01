@@ -2,6 +2,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import packageMetadata from "../../package.json" with { type: "json" };
 
 const roots: string[] = [];
 afterEach(async () => Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true }))));
@@ -22,7 +23,7 @@ describe("CLI smoke and exit semantics", () => {
     expect(JSON.parse(result.stdout)).toMatchObject({
       ok: false,
       browserExecutable: false,
-      remediation: { browser: { command: "linkedin-godmode install-browser", npxCommand: "npx -y linkedin-godmode@0.1.1 install-browser" } },
+      remediation: { browser: { command: "linkedin-godmode install-browser", npxCommand: `npx -y linkedin-godmode@${packageMetadata.version} install-browser` } },
     });
     expect(result.stderr).toBe("");
   });

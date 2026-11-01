@@ -18,10 +18,13 @@ function run(command, args, options = {}) {
 
 try {
   const packed = run("npm", ["pack", "--json", "--pack-destination", packDir]);
-  const metadata = JSON.parse(packed.stdout)[0];
+  const packResult = JSON.parse(packed.stdout);
+  const metadata = Array.isArray(packResult) ? packResult[0] : packResult["linkedin-godmode"];
+  if (!metadata?.filename) throw new Error("npm pack returned no package filename");
   const tarball = join(packDir, metadata.filename);
   const entries = run("tar", ["-tf", tarball]).stdout.trim().split("\n");
   const required = ["package/dist/cli.js", "package/dist/index.js", "package/.codex-plugin/plugin.json", "package/.mcp.json", "package/README.md", "package/SECURITY.md", "package/LICENSE", "package/skills/linkedin-operator/SKILL.md", "package/assets/readme/linkedin-godmode-hero.png", "package/assets/readme/mcp-workflow-screenshot.svg", "package/assets/readme/doctor-screenshot.svg"];
+  required.push("package/plugin.json", "package/mcp.json", "package/PRIVACY.md", "package/TERMS.md", "package/assets/icon.svg");
   for (const entry of required) if (!entries.includes(entry)) throw new Error(`tarball missing ${entry}`);
   const forbidden = entries.filter((entry) => /(^|\/)tests?(\/|$)|(^|\/)src(\/|$)|\.env(?:\.|$)|\.map$|\.pi-subagents/.test(entry));
   if (forbidden.length) throw new Error(`tarball contains forbidden files: ${forbidden.join(", ")}`);

@@ -28,7 +28,9 @@ function run(command, args, options = {}) {
 }
 
 try {
-  const packed = JSON.parse(run("npm", ["pack", "--json", "--pack-destination", packDir], { cwd: process.cwd() }).stdout)[0];
+  const packResult = JSON.parse(run("npm", ["pack", "--json", "--pack-destination", packDir], { cwd: process.cwd() }).stdout);
+  const packed = Array.isArray(packResult) ? packResult[0] : packResult["linkedin-godmode"];
+  if (!packed?.filename) throw new Error("npm pack returned no package filename");
   const tarball = join(packDir, packed.filename);
   run("npm", ["install", "--prefix", consumer, tarball]);
   const binary = join(consumer, "node_modules", ".bin", "linkedin-godmode");

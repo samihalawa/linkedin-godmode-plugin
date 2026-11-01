@@ -1,9 +1,12 @@
 {
   "mcpServers": {
     "linkedin-godmode": {
-      "cwd": ".",
       "command": "node",
-      "args": ["./dist/cli.js", "mcp"]
+      "args": [
+        "${PLUGIN_ROOT}/dist/cli.js",
+        "mcp"
+      ],
+      "cwd": "${PLUGIN_ROOT}"
     }
   }
 }

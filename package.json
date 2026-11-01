@@ -1,6 +1,6 @@
 {
   "name": "linkedin-godmode",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Generic browser and HTTP primitives for agent-operated LinkedIn workflows via local Chromium/Chrome, Browserbase, or Anchor Browser.",
   "type": "module",
   "license": "MIT",
@@ -29,6 +29,8 @@
     "./mcp": "./dist/mcp.js"
   },
   "files": [
+    "plugin.json",
+    "mcp.json",
     "dist",
     ".codex-plugin",
     ".mcp.json",
@@ -36,7 +38,10 @@
     "assets/readme",
     "README.md",
     "SECURITY.md",
-    "LICENSE"
+    "LICENSE",
+    "PRIVACY.md",
+    "TERMS.md",
+    "assets/icon.svg"
   ],
   "engines": {
     "node": ">=20.11"

@@ -15,7 +15,8 @@ describe("packed npm bin", () => {
       cwd: root, encoding: "utf8", timeout: 60_000,
     });
     expect(packed.status, `${packed.stdout}\n${packed.stderr}`).toBe(0);
-    const filename = (JSON.parse(packed.stdout) as Array<{ filename: string }>)[0]?.filename;
+    const packResult = JSON.parse(packed.stdout) as Array<{ filename: string }> | Record<string, { filename: string }>;
+    const filename = (Array.isArray(packResult) ? packResult[0] : packResult["linkedin-godmode"])?.filename;
     expect(filename).toBeTruthy();
 
     const installed = spawnSync("npm", ["install", "--ignore-scripts", "--no-audit", "--no-fund", join(root, filename!)], {

@@ -1,6 +1,6 @@
 {
   "name": "linkedin-godmode-plugin",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Agent-operated generic browser and HTTP primitives for personal LinkedIn workflows using local Chromium/Chrome, Browserbase, or Anchor Browser.",
   "author": {
     "name": "Sami Halawa",
@@ -10,23 +10,39 @@
   "homepage": "https://github.com/samihalawa/linkedin-godmode-plugin#readme",
   "repository": "https://github.com/samihalawa/linkedin-godmode-plugin",
   "license": "MIT",
-  "keywords": ["linkedin", "browser", "mcp", "playwright", "browserbase", "anchor-browser"],
+  "keywords": [
+    "linkedin",
+    "browser",
+    "mcp",
+    "playwright",
+    "browserbase",
+    "anchor-browser"
+  ],
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "LinkedIn Godmode",
-    "shortDescription": "Generic browser and HTTP control for personal LinkedIn workflows",
-    "longDescription": "Operate a dedicated local Chromium/Chrome profile, Browserbase, or Anchor Browser through generic browser, network, JavaScript, HTTP, and explicit hosted-task primitives. Includes deterministic no-AI CLI batch execution and capture-first agent skills.",
+    "shortDescription": "Browser and network workflows",
+    "longDescription": "Use generic browser, network, JavaScript and HTTP primitives for your authorized LinkedIn workflows. Inspect the current session, capture the relevant request shape, and carry out explicit actions through local Chrome/Chromium, Browserbase or Anchor Browser. Includes five agent skills and a deterministic CLI. Requires Node.js, installed package dependencies, a configured browser provider and your own authenticated session; no hosted browser account or login is bundled.",
     "developerName": "Sami Halawa",
     "category": "Developer Tools",
-    "capabilities": ["Interactive", "Read", "Write"],
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
     "websiteURL": "https://github.com/samihalawa/linkedin-godmode-plugin",
     "defaultPrompt": [
-      "Inspect my LinkedIn session and use generic browser primitives to complete my request.",
-      "Capture the relevant browser traffic, then replay only the request I explicitly ask for.",
-      "Run a deterministic no-AI browser batch using my dedicated profile."
+      "Inspect my LinkedIn session and show which browser provider is connected.",
+      "Capture the browser traffic needed to understand the request I am working on.",
+      "Use my current session to complete the LinkedIn task I explicitly describe."
     ],
     "brandColor": "#0A66C2",
-    "screenshots": []
-  }
+    "supportURL": "https://github.com/samihalawa/linkedin-godmode-plugin/issues",
+    "logo": "./assets/icon.svg",
+    "composerIcon": "./assets/icon.svg",
+    "privacyPolicyURL": "https://github.com/samihalawa/linkedin-godmode-plugin/blob/main/PRIVACY.md",
+    "termsOfServiceURL": "https://github.com/samihalawa/linkedin-godmode-plugin/blob/main/TERMS.md"
+  },
+  "requires_local_executor": true
 }
