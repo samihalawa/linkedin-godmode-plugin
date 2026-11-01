@@ -1,6 +1,7 @@
 import { access } from "node:fs/promises";
 import { constants } from "node:fs";
 import { chromium } from "playwright";
+import { connectSharedChrome } from "./shared-cdp.js";
 import { BrowserOperations } from "./browser.js";
 import { directoryMode, resolveConfig, type RuntimeConfig } from "./config.js";
 import { asSafeError, GodmodeError } from "./errors.js";
@@ -104,14 +105,28 @@ export class GodmodeRuntime {
   async doctor(): Promise<unknown> {
     let browserExecutable = false;
     try { await access(chromium.executablePath(), constants.X_OK); browserExecutable = true; } catch { browserExecutable = false; }
+    let cdpReady = false;
+    let contextCount = 0;
+    let pageCount = 0;
+    if (this.config.localCdpUrl) {
+      let browser;
+      try {
+        browser = await connectSharedChrome(this.config.localCdpUrl, this.config.timeoutMs);
+        contextCount = browser.contexts().length;
+        pageCount = browser.contexts().reduce((count, context) => count + context.pages().length, 0);
+        cdpReady = contextCount > 0;
+      } catch { cdpReady = false; }
+      finally { await browser?.close().catch(() => undefined); }
+    }
+    const localReady = this.config.localCdpUrl ? cdpReady : browserExecutable;
     let configFilePresent = false;
     try { await access(this.config.configFile, constants.R_OK); configFilePresent = true; } catch { configFilePresent = false; }
     return {
-      ok: browserExecutable,
+      ok: localReady,
       node: process.version,
       platform: process.platform,
       browserExecutable,
-      ...(!browserExecutable ? {
+      ...(!localReady && !this.config.localCdpUrl ? {
         remediation: {
           browser: {
             command: "linkedin-godmode install-browser",
@@ -124,7 +139,7 @@ export class GodmodeRuntime {
       configFile: { present: configFilePresent },
       policy: { readOnly: this.config.readOnly, hostAllowlistCount: this.config.hostAllowlist.length },
       providers: {
-        local: { ready: browserExecutable, persistentProfile: true },
+        local: { ready: localReady, mode: this.config.localCdpUrl ? "shared-cdp" : "persistent-profile", persistentProfile: !this.config.localCdpUrl, ...(this.config.localCdpUrl ? { contextCount, pageCount, borrowed: true } : {}) },
         browserbase: { configured: Boolean(process.env.BROWSERBASE_API_KEY), projectConfigured: Boolean(this.config.browserbase.projectId), liveValidated: false },
         anchor: { configured: Boolean(process.env.ANCHOR_API_KEY ?? process.env.ANCHORBROWSER_API_KEY), liveValidated: false },
       },

@@ -52,7 +52,7 @@ The same TypeScript core powers MCP, one-shot CLI commands, JSON runs, and JSONL
 Install from npm and run the environment doctor:
 
 ```bash
-npm install --global linkedin-godmode@0.1.1
+npm install --global linkedin-godmode@0.1.3
 linkedin-godmode install-browser
 linkedin-godmode doctor
 ```
@@ -74,19 +74,19 @@ linkedin-godmode doctor
 Run without a global install:
 
 ```bash
-npx -y linkedin-godmode@0.1.1 install-browser
-npx -y linkedin-godmode@0.1.1 doctor
+npx -y linkedin-godmode@0.1.3 install-browser
+npx -y linkedin-godmode@0.1.3 doctor
 ```
 
 `install-browser` runs the Chromium installer bundled with this exact package version. Optional upstream flags must follow `--`, for example `linkedin-godmode install-browser -- --dry-run`.
 
 ### Codex MCP installation
 
-The packaged Codex plugin declares `.mcp.json` and five skills. For direct Codex CLI use, install the npm MCP server:
+The packaged Codex plugin declares `.mcp.json` and five skills. The packaged plugin starts the pinned npm package `linkedin-godmode@0.1.3`, so first startup may download and cache that package and its npm dependencies. For direct Codex CLI use, install the npm MCP server:
 
 ```bash
-npx -y linkedin-godmode@0.1.1 install-browser
-codex mcp add linkedin-godmode -- npx -y linkedin-godmode@0.1.1 mcp
+npx -y linkedin-godmode@0.1.3 install-browser
+codex mcp add linkedin-godmode -- npx -y --package=linkedin-godmode@0.1.3 linkedin-godmode mcp
 ```
 
 For a source checkout:
@@ -102,7 +102,7 @@ Equivalent client configuration:
   "mcpServers": {
     "linkedin-godmode": {
       "command": "npx",
-      "args": ["-y", "linkedin-godmode@0.1.1", "mcp"],
+      "args": ["-y", "--package=linkedin-godmode@0.1.3", "linkedin-godmode", "mcp"],
       "env": {
         "LINKEDIN_GODMODE_DEFAULT_PROVIDER": "local"
       }
@@ -136,6 +136,12 @@ There are deliberately no tools named for messaging, jobs, invitations, reaction
 | **Local Chromium/Chrome** | Personal, visible browser sessions | Playwright | Dedicated local profile |
 | **Browserbase** | Remote browser infrastructure | CDP | Browserbase Context |
 | **Anchor Browser** | Remote sessions and explicit web tasks | CDP + task API | Anchor profile |
+
+### Reuse authenticated shared Chrome
+
+Set `LINKEDIN_GODMODE_CDP_URL=http://127.0.0.1:9222`, or add `"localCdpUrl": "http://127.0.0.1:9222"` to your non-secret config. The environment variable takes precedence. The endpoint must be a loopback HTTP URL. Chrome must already be running with remote debugging enabled; the plugin does not launch or install Chrome in this mode.
+
+`doctor` connects without opening a page and reports `providers.local.mode: "shared-cdp"`, readiness, default-context count and plugin-owned page count (zero for the diagnostic connection). Local sessions reuse the authenticated default context and create their own tabs. A target-filtering transport uses Playwright’s public CDP transport API to exclude existing and independently opened tabs before page initialization, so a sleeping unrelated tab does not stall attachment. Only tabs created by this client and their popups/child targets are attached. Closing a session, even with `terminate: true`, closes only its own tabs and disconnects its CDP client; the shared Chrome process and its context remain open. Headless/profile/channel options apply only to dedicated-profile mode.
 
 ### Local Playwright persistent Chromium/Chrome
 
@@ -353,6 +359,7 @@ Environment overrides:
 - `LINKEDIN_GODMODE_DEFAULT_PROVIDER`
 - `LINKEDIN_GODMODE_DEFAULT_SESSION`
 - `LINKEDIN_GODMODE_HEADLESS`
+- `LINKEDIN_GODMODE_CDP_URL` (loopback HTTP endpoint of existing shared Chrome)
 - `LINKEDIN_GODMODE_CHROME_CHANNEL`
 - `LINKEDIN_GODMODE_READ_ONLY`
 - `LINKEDIN_GODMODE_HOST_ALLOWLIST` (comma-separated)
@@ -362,7 +369,7 @@ Environment overrides:
 - `LINKEDIN_GODMODE_BROWSERBASE_BASE_URL`
 - `LINKEDIN_GODMODE_ANCHOR_BASE_URL`
 
-Configuration files are strict and reject unknown keys. They contain aliases/defaults/IDs, never API keys, cookie values, authorization headers, or CDP URLs.
+Configuration files are strict and reject unknown keys. They contain aliases/defaults/IDs, never API keys, cookie values, authorization headers, or remote CDP credentials. The optional localCdpUrl is a non-secret loopback HTTP endpoint.
 
 ## Security, safety, and Terms of Service
 
@@ -405,9 +412,9 @@ npm publish --access public
 After publication:
 
 ```bash
-npx -y linkedin-godmode@0.1.1 install-browser
-npx -y linkedin-godmode@0.1.1 doctor
-npm view linkedin-godmode@0.1.1 dist.integrity
+npx -y linkedin-godmode@0.1.3 install-browser
+npx -y linkedin-godmode@0.1.3 doctor
+npm view linkedin-godmode@0.1.3 dist.integrity
 ```
 
 Do not publish from a generated tarball, a parent monorepo, or a directory containing browser profiles or credentials.
@@ -419,6 +426,6 @@ Implementation was checked against official package source and docs on 2026-08-1
 - Browserbase Node SDK 2.16.0: sessions, contexts, and Agents/Runs
 - Anchor Browser TypeScript SDK 1.0.0: sessions, CDP helper, and `Tools.performWebTask`
 - Model Context Protocol TypeScript SDK 1.30.0
-- Playwright 1.62.1
+- Playwright 1.64.1
 
 Provider APIs evolve. The lockfile is authoritative for this release. Re-verify official SDK types and request-shape tests before upgrading.

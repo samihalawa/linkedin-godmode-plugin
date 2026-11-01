@@ -3,12 +3,13 @@
   "mcpServers": {
     "linkedin-godmode": {
       "type": "stdio",
-      "command": "node",
+      "command": "npx",
       "args": [
-        "${PLUGIN_ROOT}/dist/cli.js",
+        "-y",
+        "--package=linkedin-godmode@0.1.3",
+        "linkedin-godmode",
         "mcp"
-      ],
-      "cwd": "${PLUGIN_ROOT}"
+      ]
     }
   }
 }

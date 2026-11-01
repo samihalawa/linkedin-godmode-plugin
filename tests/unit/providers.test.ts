@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => {
   const events: string[] = [];
-  const page = { goto: vi.fn(async () => { events.push("goto"); }), url: () => "about:blank", on: vi.fn() };
+  const page = { close: vi.fn(async () => undefined), goto: vi.fn(async () => { events.push("goto"); }), url: () => "about:blank", on: vi.fn() };
   const context = {
     pages: vi.fn(() => [page]), newPage: vi.fn(async () => page), close: vi.fn(async () => undefined),
     route: vi.fn(async () => { events.push("route"); }), on: vi.fn(),
@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => {
 });
 
 vi.mock("playwright", () => ({ chromium: { connectOverCDP: mocks.connectOverCDP, launchPersistentContext: vi.fn(async () => mocks.context) } }));
+vi.mock("../../src/shared-cdp.js", () => ({ connectSharedChrome: (url: string, timeout: number) => mocks.connectOverCDP(url, { timeout, noDefaults: true }) }));
 vi.mock("@browserbasehq/sdk", () => ({
   default: class BrowserbaseMock { contexts = { create: mocks.bbContextCreate }; sessions = { create: mocks.bbSessionCreate, retrieve: mocks.bbSessionRetrieve, update: mocks.bbSessionUpdate }; },
 }));
@@ -24,7 +25,7 @@ vi.mock("anchorbrowser", () => ({
   connectBrowser: mocks.anchorConnect, createAnchorbrowserClient: vi.fn(() => ({ anchorClient: true })),
 }));
 
-import { AnchorProvider, BrowserbaseProvider } from "../../src/providers.js";
+import { LocalProvider, AnchorProvider, BrowserbaseProvider } from "../../src/providers.js";
 import { tempConfig } from "../helpers.js";
 
 const ORIGINAL = { ...process.env };
@@ -42,6 +43,34 @@ beforeEach(() => {
 afterEach(() => { process.env = { ...ORIGINAL }; });
 
 describe("provider session request shapes and ownership", () => {
+  it("borrows existing Chrome without closing its context or pre-existing tabs", async () => {
+    const existing = { close: vi.fn(async () => undefined) };
+    mocks.context.pages.mockReturnValue([existing as any]);
+    const config = await tempConfig({ localCdpUrl: "http://127.0.0.1:9222" });
+    const provider = new LocalProvider(config);
+    const lease = await provider.open({ profile: "p", headless: false, attach: true });
+    expect(mocks.connectOverCDP).toHaveBeenCalledWith(config.localCdpUrl, { timeout: config.timeoutMs, noDefaults: true });
+    expect(lease.owned).toBe(false);
+    await lease.close(true);
+    expect(existing.close).not.toHaveBeenCalled();
+    expect(mocks.context.close).not.toHaveBeenCalled();
+    expect(mocks.browser.close).toHaveBeenCalledOnce();
+    mocks.context.pages.mockReturnValue([mocks.page]);
+  });
+
+  it("closes only plugin-created CDP pages when initial navigation fails", async () => {
+    const existing = { close: vi.fn(async () => undefined) };
+    mocks.context.pages.mockReturnValue([existing as any]);
+    mocks.page.goto.mockRejectedValueOnce(new Error("navigation failed"));
+    const provider = new LocalProvider(await tempConfig({ localCdpUrl: "http://127.0.0.1:9222" }));
+    await expect(provider.open({ profile: "p", headless: false, attach: false, initialUrl: "https://www.linkedin.com/" })).rejects.toMatchObject({ code: "PROVIDER_ERROR" });
+    expect(mocks.page.close).toHaveBeenCalledOnce();
+    expect(existing.close).not.toHaveBeenCalled();
+    expect(mocks.context.close).not.toHaveBeenCalled();
+    expect(mocks.browser.close).toHaveBeenCalledOnce();
+    mocks.context.pages.mockReturnValue([mocks.page]);
+  });
+
   it("propagates Browserbase allowedDomains, installs policy, and releases owned sessions", async () => {
     const config = await tempConfig({ hostAllowlist: ["example.com", "*.linkedin.com"], browserbase: { projectId: "project-1", region: "eu-central-1" } });
     const lease = await new BrowserbaseProvider(config).open({ profile: "p", headless: true, keepAlive: true, timeoutSeconds: 120, attach: false });

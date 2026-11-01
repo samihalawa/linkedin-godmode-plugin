@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { Page } from "playwright";
 import type { RuntimeConfig } from "./config.js";
 import { GodmodeError, invariant } from "./errors.js";
-import { assertContextPolicy, assertPagePolicy, assertUrlAllowed } from "./policy.js";
+import { managedPages, trackManagedPage, assertContextPolicy, assertPagePolicy, assertUrlAllowed } from "./policy.js";
 import { createProviders, type ProviderLease, type SessionProvider } from "./providers.js";
 import type { BrowserSessionInput, ProviderName } from "./schemas.js";
 
@@ -38,7 +38,7 @@ export class SessionManager {
       case "close": {
         const session = this.get(input.sessionId);
         await this.close(session.id, input.terminate ?? false);
-        return { sessionId: session.id, closed: true, remoteTerminated: session.lease.owned || (input.terminate ?? false) };
+        return { sessionId: session.id, closed: true, remoteTerminated: session.lease.owned || (session.provider !== "local" && (input.terminate ?? false)) };
       }
       case "page_create": {
         const session = this.get(input.sessionId);
@@ -158,6 +158,7 @@ export class SessionManager {
 
   private registerPage(session: ManagedSession, page: Page): string {
     for (const [id, candidate] of session.pages) if (candidate === page) return id;
+    trackManagedPage(session.lease.context, page);
     const pageId = `page-${++session.pageSequence}`;
     session.pages.set(pageId, page);
     page.once("close", () => session.pages.delete(pageId));
@@ -165,7 +166,7 @@ export class SessionManager {
   }
 
   private synchronizePages(session: ManagedSession): void {
-    for (const page of session.lease.context.pages()) this.registerPage(session, page);
+    for (const page of managedPages(session.lease.context)) this.registerPage(session, page);
     for (const [id, page] of session.pages) if (page.isClosed()) session.pages.delete(id);
   }
 

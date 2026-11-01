@@ -6,6 +6,25 @@ import type { RuntimeConfig } from "./config.js";
 const SAFE_HTTP_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const NON_MUTATING_ACTIONS = new Set(["hover", "focus", "wait"]);
 const installedContexts = new WeakSet<BrowserContext>();
+const borrowedPages = new WeakMap<BrowserContext, Set<Page>>();
+const pageWatchers = new WeakMap<BrowserContext, (page: Page) => void>();
+const watchedPages = new WeakSet<Page>();
+
+/** Borrowed contexts never include unrelated existing or independently opened tabs. */
+export function borrowContext(context: BrowserContext): Set<Page> {
+  const pages = new Set<Page>();
+  borrowedPages.set(context, pages);
+  return pages;
+}
+export function managedPages(context: BrowserContext): Page[] {
+  const pages = borrowedPages.get(context);
+  return context.pages().filter((page) => !pages || pages.has(page));
+}
+export function trackManagedPage(context: BrowserContext, page: Page): void {
+  borrowedPages.get(context)?.add(page);
+  pageWatchers.get(context)?.(page);
+}
+
 const pageViolations = new WeakMap<Page, GodmodeError>();
 const contextViolations = new WeakMap<BrowserContext, GodmodeError>();
 const contextActivity = new WeakMap<BrowserContext, { pending: number; sequence: number }>();
@@ -56,6 +75,12 @@ export function isPageUrlAllowed(rawUrl: string, config: RuntimeConfig): boolean
 
 async function guardRoute(route: Route, context: BrowserContext, config: RuntimeConfig): Promise<void> {
   const request = route.request();
+  const managed = borrowedPages.get(context);
+  if (managed) {
+    let page: Page;
+    try { page = request.frame().page(); } catch { await route.continue(); return; }
+    if (!managed.has(page)) { await route.continue(); return; }
+  }
   let topLevelNavigation = request.isNavigationRequest();
   if (topLevelNavigation) {
     try { topLevelNavigation = request.frame().parentFrame() === null; } catch { topLevelNavigation = true; }
@@ -106,13 +131,19 @@ export async function installNavigationPolicy(context: BrowserContext, config: R
     finally { activity.pending -= 1; }
   });
   const watch = (page: Page) => {
+    const managed = borrowedPages.get(context);
+    if (managed && !managed.has(page)) return;
+    if (watchedPages.has(page)) return;
+    watchedPages.add(page);
+    page.on("popup", (popup) => { trackManagedPage(context, popup); watch(popup); });
     page.on("framenavigated", (frame) => {
       if (frame !== page.mainFrame()) return;
       try { checkPageUrl(frame.url(), config); }
       catch (error) { pageViolations.set(page, error as GodmodeError); }
     });
   };
-  for (const page of context.pages()) watch(page);
+  pageWatchers.set(context, watch);
+  for (const page of managedPages(context)) watch(page);
   context.on("page", watch);
 }
 
@@ -144,7 +175,7 @@ export function assertPagePolicy(page: Page, config: RuntimeConfig): void {
 
 export function clearContextPolicyViolations(context: BrowserContext): void {
   contextViolations.delete(context);
-  for (const page of context.pages()) pageViolations.delete(page);
+  for (const page of managedPages(context)) pageViolations.delete(page);
 }
 
 export function assertContextPolicy(context: BrowserContext, config: RuntimeConfig): void {
@@ -153,7 +184,7 @@ export function assertContextPolicy(context: BrowserContext, config: RuntimeConf
     clearContextPolicyViolations(context);
     throw violation;
   }
-  for (const page of context.pages()) assertPagePolicy(page, config);
+  for (const page of managedPages(context)) assertPagePolicy(page, config);
 }
 
 export function browserbaseAllowedDomains(config: RuntimeConfig): string[] | undefined {

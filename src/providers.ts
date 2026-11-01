@@ -8,10 +8,11 @@ import {
   type SessionCreateRequestSchema,
 } from "anchorbrowser";
 import { join } from "node:path";
+import { connectSharedChrome } from "./shared-cdp.js";
 import type { RuntimeConfig } from "./config.js";
 import { ensurePrivateDirectory, getProviderSecret } from "./config.js";
 import { GodmodeError, invariant } from "./errors.js";
-import { assertContextPolicy, assertPagePolicy, assertUrlAllowed, browserbaseAllowedDomains, installNavigationPolicy } from "./policy.js";
+import { borrowContext, trackManagedPage, assertContextPolicy, assertPagePolicy, assertUrlAllowed, browserbaseAllowedDomains, installNavigationPolicy } from "./policy.js";
 import type { ProviderName } from "./schemas.js";
 
 export interface ProviderOpenOptions {
@@ -62,6 +63,38 @@ export class LocalProvider implements SessionProvider {
   async open(options: ProviderOpenOptions): Promise<ProviderLease> {
     if (!/^[A-Za-z0-9._-]+$/.test(options.profile)) {
       throw new GodmodeError("BAD_INPUT", "Local profile names may contain only letters, digits, dot, underscore, and hyphen");
+    }
+    if (this.config.localCdpUrl) {
+      let browser: Browser | undefined;
+      let pages: ReturnType<typeof borrowContext> | undefined;
+      try {
+        browser = await connectSharedChrome(this.config.localCdpUrl, this.config.timeoutMs);
+        const context = browser.contexts()[0];
+        invariant(context, "PROVIDER_ERROR", "Shared Chrome returned no default browser context");
+        pages = borrowContext(context);
+        await installNavigationPolicy(context, this.config);
+        if (options.initialUrl) {
+          assertUrlAllowed(options.initialUrl, this.config);
+          const page = await context.newPage();
+          trackManagedPage(context, page);
+          await page.goto(options.initialUrl, { waitUntil: "domcontentloaded", timeout: this.config.timeoutMs });
+          assertPagePolicy(page, this.config);
+        }
+        const attached = browser;
+        return {
+          provider: this.name, browser, context, owned: false,
+          close: async () => {
+            await Promise.allSettled([...pages!].map((page) => page.close()));
+            // connectOverCDP browser.close disconnects this client, not external Chrome.
+            await attached.close();
+          },
+        };
+      } catch (error) {
+        await Promise.allSettled([...(pages ?? [])].map((page) => page.close()));
+        await browser?.close().catch(() => undefined);
+        if (error instanceof GodmodeError) throw error;
+        throw new GodmodeError("PROVIDER_ERROR", "Unable to connect to the existing shared Chrome CDP endpoint", undefined, { cause: error });
+      }
     }
     const userDataDir = join(this.config.profileDir, options.profile);
     await ensurePrivateDirectory(userDataDir);

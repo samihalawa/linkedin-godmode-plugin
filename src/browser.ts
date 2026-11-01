@@ -2,7 +2,7 @@ import type { BrowserContext, Locator, Page } from "playwright";
 import type { z } from "zod";
 import type { RuntimeConfig } from "./config.js";
 import { GodmodeError } from "./errors.js";
-import { assertBrowserActionAllowed, assertContextPolicy, assertEvaluateAllowed, assertUrlAllowed, clearContextPolicyViolations, settleContextPolicy } from "./policy.js";
+import { managedPages, assertBrowserActionAllowed, assertContextPolicy, assertEvaluateAllowed, assertUrlAllowed, clearContextPolicyViolations, settleContextPolicy } from "./policy.js";
 import type { BrowserActInput, BrowserCaptureInput, BrowserEvaluateInput, BrowserNavigateInput } from "./schemas.js";
 import { LocatorSchema } from "./schemas.js";
 import type { SessionManager } from "./sessions.js";
@@ -34,11 +34,11 @@ export class BrowserOperations {
   }
 
   private snapshot(context: BrowserContext): Map<Page, string> {
-    return new Map(context.pages().map((page) => [page, page.url()]));
+    return new Map(managedPages(context).map((page) => [page, page.url()]));
   }
 
   private async assertOrRecover(context: BrowserContext, before: Map<Page, string>): Promise<void> {
-    const currentPage = context.pages().find((page) => before.has(page)) ?? context.pages()[0];
+    const currentPage = managedPages(context).find((page) => before.has(page)) ?? managedPages(context)[0];
     try {
       if (currentPage) await settleContextPolicy(currentPage, this.config);
       else assertContextPolicy(context, this.config);
@@ -48,8 +48,8 @@ export class BrowserOperations {
       // An aborted Chromium navigation can commit its inert chrome-error page
       // just after the route abort. Let that settle before restoring the last
       // allowed URL, otherwise it can race and interrupt the recovery goto.
-      await Promise.all(context.pages().map((page) => page.waitForTimeout(100).catch(() => undefined)));
-      for (const page of context.pages()) {
+      await Promise.all(managedPages(context).map((page) => page.waitForTimeout(100).catch(() => undefined)));
+      for (const page of managedPages(context)) {
         const previous = before.get(page);
         if (!previous) { await page.close().catch(() => undefined); continue; }
         try { assertUrlAllowed(page.url(), this.config); }

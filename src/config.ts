@@ -8,6 +8,7 @@ import { ProviderSchema, type ProviderName } from "./schemas.js";
 const FileConfigSchema = z.object({
   stateDir: z.string().min(1).optional(),
   profileDir: z.string().min(1).optional(),
+  localCdpUrl: z.string().url().regex(/^https?:\/\/(?:127\.0\.0\.1|localhost|\[::1\])(?::\d+)?\/?$/, "CDP URL must be a loopback HTTP endpoint").optional(),
   defaultProvider: ProviderSchema.optional(),
   defaultSession: z.string().min(1).optional(),
   headless: z.boolean().optional(),
@@ -41,6 +42,7 @@ export interface RuntimeConfig {
   configFile: string;
   stateDir: string;
   profileDir: string;
+  localCdpUrl?: string;
   defaultProvider: ProviderName;
   defaultSession?: string;
   headless: boolean;
@@ -122,6 +124,8 @@ export async function resolveConfig(explicitFile?: string): Promise<RuntimeConfi
       ...(process.env.LINKEDIN_GODMODE_ANCHOR_BASE_URL ? { baseUrl: process.env.LINKEDIN_GODMODE_ANCHOR_BASE_URL } : {}),
     },
   };
+  const localCdpUrl = process.env.LINKEDIN_GODMODE_CDP_URL ?? file.localCdpUrl;
+  if (localCdpUrl !== undefined) config.localCdpUrl = FileConfigSchema.shape.localCdpUrl.unwrap().parse(localCdpUrl);
   const defaultSession = process.env.LINKEDIN_GODMODE_DEFAULT_SESSION ?? file.defaultSession;
   if (defaultSession !== undefined) config.defaultSession = defaultSession;
   await ensurePrivateDirectory(stateDir);

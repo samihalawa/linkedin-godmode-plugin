@@ -30,6 +30,18 @@ describe("config", () => {
     await expect(resolveConfig(filename)).rejects.toMatchObject({ code: "BAD_INPUT" });
   });
 
+  it("accepts loopback CDP config and environment precedence, rejecting remote endpoints", async () => {
+    const root = await mkdtemp(join(resolve(".tmp-tests"), "godmode-config-cdp-"));
+    const filename = join(root, "config.json");
+    await writeFile(filename, JSON.stringify({ localCdpUrl: "http://localhost:9222" }));
+    process.env.LINKEDIN_GODMODE_STATE_DIR = join(root, "state");
+    expect((await resolveConfig(filename)).localCdpUrl).toBe("http://localhost:9222");
+    process.env.LINKEDIN_GODMODE_CDP_URL = "http://127.0.0.1:9222";
+    expect((await resolveConfig(filename)).localCdpUrl).toBe("http://127.0.0.1:9222");
+    process.env.LINKEDIN_GODMODE_CDP_URL = "https://example.com:9222";
+    await expect(resolveConfig(filename)).rejects.toThrow();
+  });
+
   it("rejects malformed boolean environment values", async () => {
     const root = await mkdtemp(join(resolve(".tmp-tests"), "godmode-config-env-"));
     process.env.LINKEDIN_GODMODE_STATE_DIR = join(root, "state");

@@ -1,0 +1,261 @@
+import { chromium } from "playwright";
+import Browserbase from "@browserbasehq/sdk";
+import { Sessions, connectBrowser, createAnchorbrowserClient, } from "anchorbrowser";
+import { join } from "node:path";
+import { connectSharedChrome } from "./shared-cdp.js";
+import { ensurePrivateDirectory, getProviderSecret } from "./config.js";
+import { GodmodeError, invariant } from "./errors.js";
+import { borrowContext, trackManagedPage, assertContextPolicy, assertPagePolicy, assertUrlAllowed, browserbaseAllowedDomains, installNavigationPolicy } from "./policy.js";
+async function navigateInitial(context, rawUrl, config) {
+    assertContextPolicy(context, config);
+    if (!rawUrl)
+        return;
+    assertUrlAllowed(rawUrl, config);
+    const page = context.pages()[0] ?? await context.newPage();
+    try {
+        await page.goto(rawUrl, { waitUntil: "domcontentloaded", timeout: config.timeoutMs });
+    }
+    catch (error) {
+        assertContextPolicy(context, config);
+        throw error;
+    }
+    assertPagePolicy(page, config);
+    assertContextPolicy(context, config);
+}
+export class LocalProvider {
+    config;
+    name = "local";
+    constructor(config) {
+        this.config = config;
+    }
+    async open(options) {
+        if (!/^[A-Za-z0-9._-]+$/.test(options.profile)) {
+            throw new GodmodeError("BAD_INPUT", "Local profile names may contain only letters, digits, dot, underscore, and hyphen");
+        }
+        if (this.config.localCdpUrl) {
+            let browser;
+            let pages;
+            try {
+                browser = await connectSharedChrome(this.config.localCdpUrl, this.config.timeoutMs);
+                const context = browser.contexts()[0];
+                invariant(context, "PROVIDER_ERROR", "Shared Chrome returned no default browser context");
+                pages = borrowContext(context);
+                await installNavigationPolicy(context, this.config);
+                if (options.initialUrl) {
+                    assertUrlAllowed(options.initialUrl, this.config);
+                    const page = await context.newPage();
+                    trackManagedPage(context, page);
+                    await page.goto(options.initialUrl, { waitUntil: "domcontentloaded", timeout: this.config.timeoutMs });
+                    assertPagePolicy(page, this.config);
+                }
+                const attached = browser;
+                return {
+                    provider: this.name, browser, context, owned: false,
+                    close: async () => {
+                        await Promise.allSettled([...pages].map((page) => page.close()));
+                        // connectOverCDP browser.close disconnects this client, not external Chrome.
+                        await attached.close();
+                    },
+                };
+            }
+            catch (error) {
+                await Promise.allSettled([...(pages ?? [])].map((page) => page.close()));
+                await browser?.close().catch(() => undefined);
+                if (error instanceof GodmodeError)
+                    throw error;
+                throw new GodmodeError("PROVIDER_ERROR", "Unable to connect to the existing shared Chrome CDP endpoint", undefined, { cause: error });
+            }
+        }
+        const userDataDir = join(this.config.profileDir, options.profile);
+        await ensurePrivateDirectory(userDataDir);
+        let context;
+        try {
+            const channel = process.env.LINKEDIN_GODMODE_CHROME_CHANNEL;
+            context = await chromium.launchPersistentContext(userDataDir, {
+                headless: options.headless,
+                ...(channel ? { channel } : {}),
+                viewport: null,
+            });
+            await installNavigationPolicy(context, this.config);
+            await navigateInitial(context, options.initialUrl, this.config);
+        }
+        catch (error) {
+            await context.close().catch(() => undefined);
+            if (error instanceof GodmodeError)
+                throw error;
+            throw new GodmodeError("PROVIDER_ERROR", "Unable to launch the dedicated local Chromium/Chrome profile", undefined, { cause: error });
+        }
+        return {
+            provider: this.name,
+            context,
+            owned: true,
+            persistentRef: options.profile,
+            close: async () => context.close(),
+        };
+    }
+}
+export class BrowserbaseProvider {
+    config;
+    name = "browserbase";
+    client() {
+        const options = {
+            apiKey: getProviderSecret("browserbase"),
+            maxRetries: 0,
+            timeout: this.config.timeoutMs,
+        };
+        if (this.config.browserbase.baseUrl)
+            options.baseURL = this.config.browserbase.baseUrl;
+        return new Browserbase(options);
+    }
+    constructor(config) {
+        this.config = config;
+    }
+    async open(options) {
+        const client = this.client();
+        const owned = !options.attach;
+        let providerSessionId;
+        let connectUrl;
+        let persistentRef = options.persistentRef;
+        if (options.attach) {
+            invariant(options.providerSessionId, "BAD_INPUT", "providerSessionId is required to attach a Browserbase session");
+            const session = await client.sessions.retrieve(options.providerSessionId);
+            providerSessionId = session.id;
+            connectUrl = session.connectUrl;
+            persistentRef = session.contextId ?? persistentRef;
+        }
+        else {
+            if (options.keepAlive && !persistentRef) {
+                const context = await client.contexts.create(this.config.browserbase.projectId ? { projectId: this.config.browserbase.projectId } : undefined);
+                persistentRef = context.id;
+            }
+            const allowedDomains = browserbaseAllowedDomains(this.config);
+            const browserSettings = persistentRef || allowedDomains
+                ? {
+                    ...(persistentRef ? { context: { id: persistentRef, persist: true } } : {}),
+                    ...(allowedDomains ? { allowedDomains } : {}),
+                }
+                : undefined;
+            const session = await client.sessions.create({
+                ...(this.config.browserbase.projectId ? { projectId: this.config.browserbase.projectId } : {}),
+                ...(this.config.browserbase.region ? { region: this.config.browserbase.region } : {}),
+                ...(options.timeoutSeconds ? { timeout: options.timeoutSeconds } : {}),
+                keepAlive: options.keepAlive ?? false,
+                ...(browserSettings ? { browserSettings } : {}),
+            });
+            providerSessionId = session.id;
+            connectUrl = session.connectUrl;
+            persistentRef = session.contextId ?? persistentRef;
+        }
+        invariant(connectUrl, "PROVIDER_ERROR", "Browserbase did not return a CDP connection URL");
+        let browser;
+        try {
+            browser = await chromium.connectOverCDP(connectUrl, { timeout: this.config.timeoutMs });
+            const context = browser.contexts()[0];
+            invariant(context, "PROVIDER_ERROR", "Browserbase CDP connection returned no browser context");
+            await installNavigationPolicy(context, this.config);
+            await navigateInitial(context, options.initialUrl, this.config);
+            return {
+                provider: this.name,
+                browser,
+                context,
+                providerSessionId,
+                owned,
+                ...(persistentRef ? { persistentRef } : {}),
+                close: async (terminate = false) => {
+                    await browser?.close().catch(() => undefined);
+                    if (owned || terminate)
+                        await client.sessions.update(providerSessionId, { status: "REQUEST_RELEASE" }).catch(() => undefined);
+                },
+            };
+        }
+        catch (error) {
+            await browser?.close().catch(() => undefined);
+            if (owned)
+                await client.sessions.update(providerSessionId, { status: "REQUEST_RELEASE" }).catch(() => undefined);
+            if (error instanceof GodmodeError)
+                throw error;
+            throw new GodmodeError("PROVIDER_ERROR", "Unable to attach to the Browserbase session", undefined, { cause: error });
+        }
+    }
+}
+export class AnchorProvider {
+    config;
+    name = "anchor";
+    client() {
+        return createAnchorbrowserClient({
+            baseUrl: this.config.anchor.baseUrl ?? "https://api.anchorbrowser.io",
+            auth: getProviderSecret("anchor"),
+        });
+    }
+    constructor(config) {
+        this.config = config;
+    }
+    async open(options) {
+        const client = this.client();
+        const owned = !options.attach;
+        let browser;
+        let providerSessionId;
+        const persistentRef = options.persistentRef;
+        try {
+            if (options.attach) {
+                invariant(options.providerSessionId, "BAD_INPUT", "providerSessionId is required to attach an Anchor session");
+                providerSessionId = options.providerSessionId;
+                browser = await connectBrowser(providerSessionId, client);
+            }
+            else {
+                // initial_url is intentionally omitted: policy interception must exist before navigation.
+                const body = {
+                    session: {
+                        timeout: {
+                            ...(options.timeoutSeconds ? { max_duration: Math.max(1, Math.ceil(options.timeoutSeconds / 60)) } : {}),
+                            idle_timeout: options.keepAlive ? -1 : 5,
+                        },
+                        recording: { active: false },
+                    },
+                    browser: {
+                        headless: { active: options.headless },
+                        ...(persistentRef ? { profile: { name: persistentRef, persist: true } } : {}),
+                    },
+                };
+                const session = await Sessions.createSession({ body, client });
+                providerSessionId = session.data?.id ?? "";
+                invariant(providerSessionId, "PROVIDER_ERROR", "Anchor did not return a session ID");
+                browser = session.data?.cdp_url
+                    ? await chromium.connectOverCDP(session.data.cdp_url, { timeout: this.config.timeoutMs })
+                    : await connectBrowser(providerSessionId, client);
+            }
+            const context = browser.contexts()[0];
+            invariant(context, "PROVIDER_ERROR", "Anchor CDP connection returned no browser context");
+            await installNavigationPolicy(context, this.config);
+            await navigateInitial(context, options.initialUrl, this.config);
+            return {
+                provider: this.name,
+                browser,
+                context,
+                providerSessionId,
+                owned,
+                ...(persistentRef ? { persistentRef } : {}),
+                close: async (terminate = false) => {
+                    await browser?.close().catch(() => undefined);
+                    if (owned || terminate)
+                        await Sessions.deleteSession({ path: { session_id: providerSessionId }, client }).catch(() => undefined);
+                },
+            };
+        }
+        catch (error) {
+            await browser?.close().catch(() => undefined);
+            if (owned && providerSessionId)
+                await Sessions.deleteSession({ path: { session_id: providerSessionId }, client }).catch(() => undefined);
+            if (error instanceof GodmodeError)
+                throw error;
+            throw new GodmodeError("PROVIDER_ERROR", "Unable to attach to the Anchor session", undefined, { cause: error });
+        }
+    }
+}
+export function createProviders(config) {
+    return new Map([
+        ["local", new LocalProvider(config)],
+        ["browserbase", new BrowserbaseProvider(config)],
+        ["anchor", new AnchorProvider(config)],
+    ]);
+}
